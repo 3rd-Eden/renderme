@@ -76,3 +76,8 @@ renderme.github = function github(url, fn) {
 
   githulk.repository.readme(url.pathname, fn);
 };
+
+//
+// Expose the module.
+//
+module.exports = renderme;
