@@ -21,7 +21,7 @@ describe('renderme', function () {
     npm.packages.get('primus', function (err, pkg) {
       if (err) return done(err);
 
-      renderme(pkg, done);
+      renderme(pkg[0], done);
     });
   });
 });
