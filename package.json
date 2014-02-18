@@ -4,7 +4,7 @@
   "description": "Render README files from github",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha $(find test -name '*.test.js')"
   },
   "repository": {
     "type": "git",
@@ -22,9 +22,16 @@
   },
   "homepage": "https://github.com/3rd-Eden/renderme",
   "dependencies": {
-    "marked": "~0.3.1",
-    "githulk": "0.0.0",
-    "debug": "~0.7.4",
-    "pygmentize-bundled": "~2.1.0"
+    "debug": "0.7.x",
+    "githulk": "0.0.x",
+    "marked": "0.3.x",
+    "pygmentize-bundled": "2.1.x",
+    "sanitizer": "0.1.x"
+  },
+  "devDependencies": {
+    "chai": "1.9.x",
+    "mocha": "1.17.x",
+    "npmjs": "0.0.x",
+    "pre-commit": "0.0.x"
   }
 }

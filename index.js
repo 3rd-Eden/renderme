@@ -2,7 +2,7 @@
 
 var pygmentize = require('pygmentize-bundled')
   , debug = require('debug')('renderme')
-  , parse = require('url').parse
+  , sanitizer = require('sanitizer')
   , GitHulk = require('githulk')
   , marked = require('marked');
 
@@ -20,24 +20,67 @@ var markdown = /md|mkdn?|mdwn|mdown|markdown|litcoffee/i;
  * do so it needs to have the README contents, file extension and possible
  * github URL so it can render README without markdown support.
  *
- * @param {Object} data content/extension combination.
- * @param {String} github Github location.
+ * @param {Object} data Data structure that contains a `readme`.
  * @param {Function} fn The callback
  * @api public
  */
-function renderme(data, github, fn) {
-  if (!markdown.test(data.extension)) return renderme.github(github, fn);
+function renderme(data, fn) {
+  render(data, function rendered(err, html) {
+    if (!html && data.readme) {
+      html = data.readme || '';
+    }
 
-  marked(data.content, {
+    //
+    // Make sure we return a clean output.
+    //
+    fn(err, sanitizer.sanitize(html));
+  });
+}
+
+/**
+ * Figure out how we should render the given data structure.
+ *
+ * @param {Object} data Data structure that contains a `readme`.
+ * @param {Function} fn The callback
+ * @api private
+ */
+function render(data, fn) {
+  var github = renderme.githulk.project(data)
+    , extension = data.readmeFilename
+    , readme = data.readme;
+
+  //
+  // We don't support this extension, defer rendering to the Github API which
+  // uses their Markup parser to render all supported README extensions.
+  //
+  if (!markdown.test(extension)) {
+    return renderme.githulk.repository.readme(github.user +'/'+ github.repo, fn);
+  }
+
+  renderme.markdown(readme, function rendered(err, readme) {
+    if (!err) return fn(err, readme);
+
+    //
+    // We failed to render the markdown, attempt github.
+    //
+    renderme.githulk.repository.readme(github.user +'/'+ github.repo, fn);
+  });
+}
+
+/**
+ * Render markdown files.
+ *
+ * @param {String} content The Markdown content that we should render.
+ * @param {Function} fn The callback
+ * @api private
+ */
+renderme.markdown = function markdown(content, fn) {
+  marked(content, {
     highlight: renderme.highlight,    // Use pygment for syntax highlighting
     gfm: true,                        // Github Flavoured Markdown.
     tables: true                      // Github Flavoured Tables.
-  }, function render(err, data) {
-    if (err) return renderme.github(github, fn);
-
-    fn(err, data);
-  });
-}
+  }, fn);
+};
 
 /**
  * Render a code block using pygmentize.
@@ -56,26 +99,13 @@ renderme.highlight = function highlight(code, lang, fn) {
 };
 
 /**
- * Parse the README through the Github API.
+ * Create a GitHulk instance that we use to query the Github API.
  *
- * @param {String} url
- * @param {Function} fn The callback.
- * @api private
+ * @type {GitHulk}
+ * @private
  */
-renderme.github = function github(url, fn) {
-  if (!url) return fn();
-
-  debug('rendering readme for %s through the github api', url);
-  url = parse(url);
-
-  var githulk = new GitHulk({
-    authorization: url.auth
-    ? 'Basic '+ (new Buffer(url.auth)).toString('base64')
-    : undefined
-  });
-
-  githulk.repository.readme(url.pathname, fn);
-};
+renderme.githulk = new GitHulk();
+renderme.GitHulk = GitHulk;
 
 //
 // Expose the module.
