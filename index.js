@@ -4,7 +4,8 @@ var pygmentize = require('pygmentize-bundled')
   , debug = require('debug')('renderme')
   , sanitizer = require('sanitizer')
   , GitHulk = require('githulk')
-  , marked = require('marked');
+  , marked = require('marked')
+  , url = require('url');
 
 /**
  * Regular Expression for detecting markdown support based on the file
@@ -35,7 +36,7 @@ function renderme(data, fn) {
     //
     // Make sure we return a clean output.
     //
-    fn(err, sanitizer.sanitize(html));
+    fn(err, sanitizer.sanitize(html, renderme.url));
   });
 }
 
@@ -68,6 +69,37 @@ function render(data, fn) {
     renderme.githulk.repository.readme(github.user +'/'+ github.repo, fn);
   });
 }
+
+/**
+ * Handle the URL's that the sanitizer finds.
+ *
+ * @param {Object} parsed URL object.
+ * @returns {String}
+ * @api private
+ */
+renderme.url = function policy(parsed) {
+  parsed = url.parse(url.format({
+    host: parsed.domain_ + (parsed.port_ ? ':'+ parsed.port_ : ''),
+    search: parsed.query_ ? '?'+ parsed.query_ : '',
+    protocol: parsed.scheme_ +':',
+    pathname: parsed.path_,
+    hash: parsed.fragment_
+  }));
+
+  if (!parsed) return null;
+
+  //
+  // Force secure URLs for gravatar.
+  //
+  if (
+       parsed.protocol === 'http:'
+    && (parsed.hostname && parsed.hostname.match(/gravatar.com$/))
+  ) {
+    return url.format('https://secure.gravatar.com' + parsed.pathname);
+  }
+
+  return url.format(parsed);
+};
 
 /**
  * Render markdown files.
