@@ -24,4 +24,12 @@ describe('renderme', function () {
       renderme(pkg[0], done);
     });
   });
+
+  it('accepts arrays', function (done) {
+    npm.packages.get('load', function (err, pkg) {
+      if (err) return done(err);
+
+      renderme(pkg, done);
+    });
+  });
 });
