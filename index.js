@@ -25,6 +25,8 @@ var markdown = /md|mkdn?|mdwn|mdown|markdown|litcoffee/i;
  * @api public
  */
 function renderme(data, fn) {
+  data = Array.isArray(data) ? data : data;
+
   render(data, function rendered(err, html) {
     if (!html && data.readme) {
       html = data.readme || '';
