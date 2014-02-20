@@ -126,40 +126,40 @@ renderme.url = function policy(parsed) {
  * @api private
  */
 renderme.markdown = function markdown(content, fn) {
+  var snippet = 0;
+
+  /**
+   * Render a code block using pygmentize.
+   *
+   * @param {String} code The code block.
+   * @param {String} lang The programming language.
+   * @param {function} fn The callback.
+   * @api private
+   */
+  function highlight(code, lang, fn) {
+    pygmentize({
+        lang: lang || 'text'                    // The programming language.
+      , format: 'html'                          // Output format.
+      , options: {
+          linenos: 'table'                      // Add line numbers.
+        , lineanchors: 'snippet-'+ (++snippet)  // Prefix is based on the amount of snippets.
+        , anchorlinenos: true                   // Wrap line numbers in <a> elements.
+      }
+    }, code, function highlighted(err, data) {
+      if (err) {
+        debug('failed to highlight code snippet in %s', lang);
+        return fn(err);
+      }
+
+      fn(err, data.toString());
+    });
+  }
+
   marked(content, {
-    highlight: renderme.highlight,    // Use pygment for syntax highlighting
+    highlight: highlight,             // Use pygmentze for syntax highlighting
     gfm: true,                        // Github Flavoured Markdown.
     tables: true                      // Github Flavoured Tables.
   }, fn);
-};
-
-/**
- * Render a code block using pygmentize.
- *
- * @param {String} code The code block.
- * @param {String} lang The programming language.
- * @param {function} fn The callback.
- * @api private
- */
-renderme.highlight = function highlight(code, lang, fn) {
-  if (!lang) return fn();
-
-  pygmentize({
-      lang: lang                  // The programming language.
-    , format: 'html'              // Output format.
-    , options: {
-        linenos: 'table'          // Add line numbers.
-      , lineanchors: 'line'       // Prefix.
-      , anchorlinenos: true       // Wrap line numbers in <a> elements.
-    }
-  }, code, function highlighted(err, data) {
-    if (err) {
-      debug('failed to highlight code snippet in %s', lang);
-      return fn(err);
-    }
-
-    fn(err, data.toString());
-  });
 };
 
 /**
