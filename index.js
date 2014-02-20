@@ -158,8 +158,25 @@ renderme.markdown = function markdown(content, fn) {
   marked(content, {
     highlight: highlight,             // Use pygmentze for syntax highlighting
     gfm: true,                        // Github Flavoured Markdown.
-    tables: true                      // Github Flavoured Tables.
+    tables: true,                     // Github Flavoured Tables.
+    renderer: renderme.renderer       // Custom renderer.
   }, fn);
+};
+
+/**
+ * A custom marked renderer so we can attempt to render the markup in exactly
+ * the same
+ *
+ * @type {marked.Renderer}
+ * @private
+ */
+renderme.renderer = new marked.Renderer();
+
+//
+// Override the code renderer as our markup is already created by pygments.
+//
+renderme.renderer.code = function render(code, lang, escape) {
+  return code; // @TODO what about failed highlighting?
 };
 
 /**
