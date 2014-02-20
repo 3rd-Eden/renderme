@@ -137,11 +137,15 @@ renderme.markdown = function markdown(content, fn) {
  * @api private
  */
 renderme.highlight = function highlight(code, lang, fn) {
+  if (!lang) return fn();
+
   pygmentize({
-      lang: lang          // The programming language.
-    , format: 'html'      // Output format.
-    , linenos: 'table'    // Add line numbers.
-    , lineanchors: 'line' // Prefix.
+      lang: lang                  // The programming language.
+    , format: 'html'              // Output format.
+    , options: {
+        linenos: 'table'          // Add line numbers.
+      , lineanchors: 'line'       // Prefix.
+    }
   }, code, function highlighted(err, data) {
     if (err) {
       debug('failed to highlight code snippet in %s', lang);
