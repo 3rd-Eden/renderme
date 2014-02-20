@@ -57,15 +57,27 @@ function render(data, fn) {
   // uses their Markup parser to render all supported README extensions.
   //
   if (!markdown.test(extension)) {
+    if (!github) {
+      debug('unable to reliably detect data as markdown, no github info, giving up');
+      return fn();
+    }
+
+    debug('unable to reliably detect data as markdown, deferring to github');
     return renderme.githulk.repository.readme(github.user +'/'+ github.repo, fn);
   }
 
   renderme.markdown(readme, function rendered(err, readme) {
     if (!err) return fn(err, readme);
 
+    if (!github) {
+      debug('failed to parse content as markdown, no github info, giving up');
+      return fn();
+    }
+
     //
     // We failed to render the markdown, attempt github.
     //
+    debug('failed to parse content as markdown, deferring to github');
     renderme.githulk.repository.readme(github.user +'/'+ github.repo, fn);
   });
 }
@@ -125,8 +137,16 @@ renderme.markdown = function markdown(content, fn) {
  * @api private
  */
 renderme.highlight = function highlight(code, lang, fn) {
-  pygmentize({ lang: lang, format: 'html' }, code, function highlighted(err, data) {
-    if (err) return fn(err);
+  pygmentize({
+      lang: lang          // The programming language.
+    , format: 'html'      // Output format.
+    , linenos: 'table'    // Add line numbers.
+    , lineanchors: 'line' // Prefix.
+  }, code, function highlighted(err, data) {
+    if (err) {
+      debug('failed to highlight code snippet in %s', lang);
+      return fn(err);
+    }
 
     fn(err, data.toString());
   });
