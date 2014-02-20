@@ -147,6 +147,11 @@ renderme.markdown = function markdown(content, fn) {
       }
     }, code, function highlighted(err, data) {
       if (err) {
+        if (lang !== 'text') {
+          debug('failed to highlight code snippet in %s -- attempting in text', lang);
+          return highlight(code, 'text', fn);
+        }
+
         debug('failed to highlight code snippet in %s', lang);
         return fn(err);
       }
