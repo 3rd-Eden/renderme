@@ -144,6 +144,7 @@ renderme.markdown = function markdown(content, fn) {
           linenos: 'table'                      // Add line numbers.
         , lineanchors: 'snippet-'+ (++snippet)  // Prefix is based on the amount of snippets.
         , anchorlinenos: true                   // Wrap line numbers in <a> elements.
+        , cssclass: 'renderme'                  // Use our CSS class.
       }
     }, code, function highlighted(err, data) {
       if (err) {
