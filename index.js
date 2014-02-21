@@ -21,14 +21,23 @@ var markdown = /md|mkdn?|mdwn|mdown|markdown|litcoffee/i;
  * do so it needs to have the README contents, file extension and possible
  * github URL so it can render README without markdown support.
  *
+ * Options:
+ * - githulk: A pre-authorized githulk instance.
+ *
  * @param {Object} data Data structure that contains a `readme`.
+ * @param {Object} options Optional options.
  * @param {Function} fn The callback
  * @api public
  */
-function renderme(data, fn) {
+function renderme(data, options, fn) {
   data = Array.isArray(data) ? data : data;
 
-  render(data, function rendered(err, html) {
+  if ('function' === typeof options) {
+    fn = options;
+    options = {};
+  }
+
+  render(data, options, function rendered(err, html) {
     if (!html && data.readme) {
       html = data.readme || '';
     }
@@ -44,12 +53,14 @@ function renderme(data, fn) {
  * Figure out how we should render the given data structure.
  *
  * @param {Object} data Data structure that contains a `readme`.
+ * @param {Object} options Optional options.
  * @param {Function} fn The callback
  * @api private
  */
-function render(data, fn) {
-  var github = renderme.githulk.project(data)
+function render(data, options, fn) {
+  var githulk = options.githulk || renderme.githulk
     , extension = data.readmeFilename
+    , github = githulk.project(data)
     , readme = data.readme;
 
   //
@@ -63,7 +74,7 @@ function render(data, fn) {
     }
 
     debug('unable to reliably detect data as markdown, deferring to github');
-    return renderme.githulk.repository.readme(github.user +'/'+ github.repo, fn);
+    return githulk.repository.readme(github.user +'/'+ github.repo, fn);
   }
 
   renderme.markdown(readme, function rendered(err, readme) {
@@ -78,7 +89,7 @@ function render(data, fn) {
     // We failed to render the markdown, attempt github.
     //
     debug('failed to parse content as markdown, deferring to github');
-    renderme.githulk.repository.readme(github.user +'/'+ github.repo, fn);
+    githulk.repository.readme(github.user +'/'+ github.repo, fn);
   });
 }
 
