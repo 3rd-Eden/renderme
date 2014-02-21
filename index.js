@@ -112,7 +112,8 @@ renderme.url = function policy(parsed) {
        parsed.protocol === 'http:'
     && (parsed.hostname && parsed.hostname.match(/gravatar.com$/))
   ) {
-    return url.format('https://secure.gravatar.com' + parsed.pathname);
+    parsed.hostname = parsed.host = 'secure.gravatar.com';
+    parsed.protocol = 'https:';
   }
 
   return url.format(parsed);
