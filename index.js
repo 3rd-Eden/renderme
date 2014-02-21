@@ -93,7 +93,7 @@ renderme.url = function policy(parsed) {
   //
   // These are hashes that jump right to the content somewhere.
   //
-  if (!parsed._domain && parsed.fragment_) return '#'+ parsed.fragment_;
+  if (!parsed.domain_ && parsed.fragment_) return '#'+ parsed.fragment_;
 
   parsed = url.parse(url.format({
     host: parsed.domain_ + (parsed.port_ ? ':'+ parsed.port_ : ''),
