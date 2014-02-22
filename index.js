@@ -37,6 +37,9 @@ function renderme(data, options, fn) {
     options = {};
   }
 
+  options.githulk = options.githulk || renderme.githulk;
+  options.github = options.githulk.project(data);
+
   render(data, options, function rendered(err, html) {
     if (!html && data.readme) {
       html = data.readme || '';
@@ -45,7 +48,13 @@ function renderme(data, options, fn) {
     //
     // Make sure we return a clean output.
     //
-    fn(err, sanitizer.sanitize(html, renderme.url));
+    fn(
+      err,
+      sanitizer.sanitize(
+        html,
+        renderme.url.bind(renderme, options.github)
+      )
+    );
   });
 }
 
@@ -58,9 +67,9 @@ function renderme(data, options, fn) {
  * @api private
  */
 function render(data, options, fn) {
-  var githulk = options.githulk || renderme.githulk
-    , extension = data.readmeFilename
-    , github = githulk.project(data)
+  var extension = data.readmeFilename
+    , githulk = options.githulk
+    , github = options.github
     , readme = data.readme;
 
   //
@@ -96,17 +105,18 @@ function render(data, options, fn) {
 /**
  * Handle the URL's that the sanitizer finds.
  *
+ * @param {Object} github Possible Github url
  * @param {Object} parsed URL object.
  * @returns {String}
  * @api private
  */
-renderme.url = function policy(parsed) {
+renderme.url = function policy(github, parsed) {
   //
   // These are hashes that jump right to the content somewhere.
   //
   if (!parsed.domain_ && parsed.fragment_) return '#'+ parsed.fragment_;
 
-  parsed = url.parse(url.format({
+  var data = url.parse(url.format({
     host: parsed.domain_ + (parsed.port_ ? ':'+ parsed.port_ : ''),
     search: parsed.query_ ? '?'+ parsed.query_ : '',
     protocol: parsed.scheme_ +':',
@@ -114,18 +124,28 @@ renderme.url = function policy(parsed) {
     hash: parsed.fragment_
   }));
 
-  if (!parsed) return null;
+  if (!data) return null;
 
   //
   // Force secure URLs for gravatar.
   //
   if (
-       parsed.protocol === 'http:'
-    && (parsed.hostname && parsed.hostname.match(/gravatar.com$/))
+       data.protocol === 'http:'
+    && (data.hostname && data.hostname.match(/gravatar.com$/))
   ) {
-    parsed.hostname = parsed.host = 'secure.gravatar.com';
-    parsed.protocol = 'https:';
+    data.hostname = data.host = 'secure.gravatar.com';
+    data.protocol = 'https:';
   }
+
+  //
+  // No parsed domain, but we do have github information so assume that we want
+  // to display an URL to github instead of null:null URL.
+  //
+  if (!parsed.domain_ && github) {
+    data.protocol = 'https:';
+    data.hostname = data.host = 'raw.github.com';
+    data.pathname = data.path = '/'+ github.user +'/'+ github.repo +'/blob/master/'+ parsed.path_;
+  } else if (!parsed.domain_) return null;
 
   return url.format(parsed);
 };
