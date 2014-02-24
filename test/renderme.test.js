@@ -1,7 +1,7 @@
 describe('renderme', function () {
   'use strict';
 
-  var Registry = require('npmjs')
+  var Registry = require('npm.js')
     , npm = new Registry();
 
   var renderme = require('../')
