@@ -42,8 +42,14 @@ function renderme(data, options, fn) {
 
   render(data, options, function rendered(err, html) {
     if (!html && data.readme) {
-      html = data.readme || '';
+      html = data.readme;
     }
+
+    //
+    // Just ignore the error, it was a 404, the README file on github could not
+    // be located.
+    //
+    if (err && err.statusCode === 404) err = null;
 
     //
     // Make sure we return a clean output.
@@ -51,7 +57,7 @@ function renderme(data, options, fn) {
     fn(
       err,
       sanitizer.sanitize(
-        html,
+        html || '',
         renderme.url.bind(renderme, options.github)
       )
     );
