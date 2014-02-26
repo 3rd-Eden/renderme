@@ -151,9 +151,11 @@ renderme.url = function policy(github, parsed) {
     data.protocol = 'https:';
     data.hostname = data.host = 'raw.github.com';
     data.pathname = data.path = '/'+ github.user +'/'+ github.repo +'/blob/master/'+ parsed.path_;
-  } else if (!parsed.domain_) return null;
+  } else if (!parsed.domain_) {
+    return null;
+  }
 
-  return url.format(parsed);
+  return url.format(data);
 };
 
 /**
