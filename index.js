@@ -13,6 +13,7 @@ var pygmentize = require('pygmentize-bundled')
  *
  * Options:
  * - githulk: A pre-authorized githulk instance.
+ * - github: A object with `user` and `repo` information.
  *
  * @param {Object} data Data structure that contains a `readme`.
  * @param {Object} options Optional options.
@@ -28,7 +29,7 @@ function renderme(data, options, fn) {
   }
 
   options.githulk = options.githulk || renderme.githulk;
-  options.github = options.githulk.project(data);
+  options.github = options.github || options.githulk.project(data);
 
   render(data, options, function rendered(err, html) {
     if (!html && data.readme) {
