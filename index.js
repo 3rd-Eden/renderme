@@ -7,15 +7,6 @@ var pygmentize = require('pygmentize-bundled')
   , marked = require('marked');
 
 /**
- * Regular Expression for detecting markdown support based on the file
- * extension.
- *
- * @type {RegExp}
- * @private
- */
-var markdown = /md|mkdn?|mdwn|mdown|markdown|litcoffee/i;
-
-/**
  * Render a README file correctly so it can be presented on a page. In order to
  * do so it needs to have the README contents, file extension and possible
  * github URL so it can render README without markdown support.
@@ -53,13 +44,7 @@ function renderme(data, options, fn) {
     //
     // Make sure we return a clean output.
     //
-    fn(
-      err,
-      sanitizer.sanitize(
-        html || '',
-        renderme.url.bind(renderme, options.github)
-      )
-    );
+    fn(err, sanitizer.sanitize(html || '', url.bind(null, options.github)));
   });
 }
 
@@ -81,7 +66,7 @@ function render(data, options, fn) {
   // We don't support this extension, defer rendering to the Github API which
   // uses their Markup parser to render all supported README extensions.
   //
-  if (!markdown.test(extension)) {
+  if (!detect(readme, extension)) {
     if (!github) {
       debug('unable to reliably detect data as markdown, no github info, giving up');
       return fn();
@@ -91,7 +76,7 @@ function render(data, options, fn) {
     return githulk.repository.readme(github.user +'/'+ github.repo, fn);
   }
 
-  renderme.markdown(readme, function rendered(err, readme) {
+  markdown(readme, function rendered(err, readme) {
     if (!err) return fn(err, readme);
 
     if (!github) {
@@ -115,7 +100,7 @@ function render(data, options, fn) {
  * @returns {String}
  * @api private
  */
-renderme.url = function policy(github, uri) {
+function url(github, uri) {
   //
   // Force secure URLs for gravatar.
   //
@@ -134,8 +119,57 @@ renderme.url = function policy(github, uri) {
     uri.setPath('/'+ github.user +'/'+ github.repo +'/blob/master'+ uri.getPath());
   }
 
+  //
+  // This URL is a relative URL and should be considered harmful as it could
+  // trigger /sign-out or what routes of the page that renders this content.
+  //
+  if (!uri.hasDomain() && !uri.hasScheme() && uri.hasPath()) return null;
+
   return uri.toString();
-};
+}
+
+/**
+ * Attempt to detect markdown.
+ *
+ * @param {String} content The possible markdown content
+ * @param {String} extension File extension.
+ * @returns {Boolean}
+ * @api private
+ */
+function detect(content, extension) {
+  //
+  // All possible extensions that are used to detect markdown.
+  //
+  if (extension && /md|mkdn?|mdwn|mdown|markdown|litcoffee/i.test(extension)) {
+    return true;
+  }
+
+  if (!content) return false;
+
+  var match;
+
+  if (
+       // Multiple back ticks indicate code blocks
+       (match = content.match(/`/)) && match.length >= 2
+
+       // Multiple dash/stars/plus indicate a bullet list
+    || (match = content.match(/^[\*\+\-] /mg)) && match.length >= 2
+
+       // Math test
+    || /\$([^ \t\n\$]([^\$]*[^ \t\n\$])?)\$/.test(content)
+
+       // Emphasis.
+    || /__([\s\S]+?)__(?!_)|\*\*([\s\S]+?)\*\*(?!\*)/.test(content)
+
+       // Header styles
+    || /(^#{1,6}[^#])|(^[\-\=]{5,})/m.test(content)
+
+       // Link patterns []() []: etc.
+    || /\]\(|\]\[|\]\:/.test(content)
+  ) return true;
+
+  return false;
+}
 
 /**
  * Render markdown files.
@@ -144,7 +178,7 @@ renderme.url = function policy(github, uri) {
  * @param {Function} fn The callback
  * @api private
  */
-renderme.markdown = function markdown(content, fn) {
+function markdown(content, fn) {
   var snippet = 0;
 
   /**
@@ -184,9 +218,9 @@ renderme.markdown = function markdown(content, fn) {
     highlight: highlight,             // Use pygmentze for syntax highlighting
     gfm: true,                        // Github Flavoured Markdown.
     tables: true,                     // Github Flavoured Tables.
-    renderer: renderme.renderer       // Custom renderer.
+    renderer: renderer                // Custom renderer.
   }, fn);
-};
+}
 
 /**
  * A custom marked renderer so we can attempt to render the markup in exactly
@@ -195,12 +229,12 @@ renderme.markdown = function markdown(content, fn) {
  * @type {marked.Renderer}
  * @private
  */
-renderme.renderer = new marked.Renderer();
+var renderer = new marked.Renderer();
 
 //
 // Override the code renderer as our markup is already created by pygments.
 //
-renderme.renderer.code = function render(code, lang, escape) {
+renderer.code = function render(code, lang, escape) {
   return code; // @TODO what about failed highlighting?
 };
 
@@ -212,6 +246,14 @@ renderme.renderer.code = function render(code, lang, escape) {
  */
 renderme.githulk = new GitHulk();
 renderme.GitHulk = GitHulk;
+
+//
+// Expose some of our privates
+//
+renderme.markdown = markdown;
+renderme.render = render;
+renderme.detect = detect;
+renderme.url = url;
 
 //
 // Expose the module.
