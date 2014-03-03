@@ -131,7 +131,7 @@ renderme.url = function policy(github, uri) {
   if (!uri.hasDomain() && github && !uri.hasFragment()) {
     uri.setDomain('raw.github.com');
     uri.setScheme('https');
-    uri.setPath('/'+ github.user +'/'+ github.repo +'/blob/master/'+ uri.getPath());
+    uri.setPath('/'+ github.user +'/'+ github.repo +'/blob/master'+ uri.getPath());
   }
 
   return uri.toString();
