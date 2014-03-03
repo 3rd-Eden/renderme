@@ -8,28 +8,36 @@ describe('renderme', function () {
     , chai = require('chai')
     , expect = chai.expect;
 
-  //
-  // Bump the timeout as we're doing external API calls during the tests.
-  //
-  this.timeout(10000);
-
   it('is exported as a function', function () {
     expect(renderme).to.be.a('function');
   });
 
-  it('renders the primus markdown', function (done) {
-    npm.packages.get('primus', function (err, pkg) {
-      if (err) return done(err);
+  describe('#url', function () {
+    //
+    // The URI library has been extracted from the Google Caja library that the
+    // `santizer` modulule is using to parse and clean up URLs. This is the
+    // exact data object
+    //
+    var URI = require('./uri');
 
-      renderme(pkg[0], done);
+    it('correctly renders url fragments', function () {
+      var uri = URI.parse('#readme');
+      expect(renderme.url(null, uri)).to.equal('#readme');
     });
-  });
 
-  it('accepts arrays', function (done) {
-    npm.packages.get('load', function (err, pkg) {
-      if (err) return done(err);
+    it('forces secure gravatar URLs', function () {
+      var uri = URI.parse('http://gravatar.com/avatar/21f4971707a00270b92e2ae791d5633d');
+      expect(renderme.url(null, uri)).to.equal('https://secure.gravatar.com/avatar/21f4971707a00270b92e2ae791d5633d');
+    });
 
-      renderme(pkg, done);
+    it('doesnt strip querystrings from URLs', function () {
+      var uri = URI.parse('https://travis-ci.org/primus/primus.png?branch=master');
+      expect(renderme.url(null, uri)).to.include('branch=master');
+    });
+
+    it('supports mailto:', function () {
+      var uri = URI.parse('mailto:foo@bar.com');
+      expect(renderme.url(null, uri)).to.equal('mailto:foo@bar.com');
     });
   });
 });

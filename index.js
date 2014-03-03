@@ -4,8 +4,7 @@ var pygmentize = require('pygmentize-bundled')
   , debug = require('debug')('renderme')
   , sanitizer = require('sanitizer')
   , GitHulk = require('githulk')
-  , marked = require('marked')
-  , url = require('url');
+  , marked = require('marked');
 
 /**
  * Regular Expression for detecting markdown support based on the file
@@ -111,51 +110,31 @@ function render(data, options, fn) {
 /**
  * Handle the URL's that the sanitizer finds.
  *
- * @param {Object} github Possible Github url
- * @param {Object} parsed URL object.
+ * @param {Object} github Possible Github URL
+ * @param {Object} uri URL object.
  * @returns {String}
  * @api private
  */
-renderme.url = function policy(github, parsed) {
-  //
-  // These are hashes that jump right to the content somewhere.
-  //
-  if (!parsed.domain_ && parsed.fragment_) return '#'+ parsed.fragment_;
-
-  var data = url.parse(url.format({
-    host: parsed.domain_ + (parsed.port_ ? ':'+ parsed.port_ : ''),
-    search: parsed.query_ ? '?'+ parsed.query_ : '',
-    protocol: parsed.scheme_ +':',
-    pathname: parsed.path_,
-    hash: parsed.fragment_
-  }));
-
-  if (!data) return null;
-
+renderme.url = function policy(github, uri) {
   //
   // Force secure URLs for gravatar.
   //
-  if (
-       data.protocol === 'http:'
-    && (data.hostname && data.hostname.match(/gravatar.com$/))
-  ) {
-    data.hostname = data.host = 'secure.gravatar.com';
-    data.protocol = 'https:';
+  if ((uri.getDomain() || '').match(/gravatar.com$/)) {
+    uri.setDomain('secure.gravatar.com');
+    uri.setScheme('https');
   }
 
   //
   // No parsed domain, but we do have github information so assume that we want
   // to display an URL to github instead of null:null URL.
   //
-  if (!parsed.domain_ && github) {
-    data.protocol = 'https:';
-    data.hostname = data.host = 'raw.github.com';
-    data.pathname = data.path = '/'+ github.user +'/'+ github.repo +'/blob/master/'+ parsed.path_;
-  } else if (!parsed.domain_) {
-    return null;
+  if (!uri.hasDomain() && github && !uri.hasFragment()) {
+    uri.setDomain('raw.github.com');
+    uri.setScheme('https');
+    uri.setPath('/'+ github.user +'/'+ github.repo +'/blob/master/'+ uri.getPath());
   }
 
-  return url.format(data);
+  return uri.toString();
 };
 
 /**
