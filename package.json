@@ -1,6 +1,6 @@
 {
   "name": "renderme",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Render README files from github",
   "main": "index.js",
   "scripts": {
