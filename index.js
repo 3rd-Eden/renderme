@@ -12,8 +12,12 @@ var pygmentize = require('pygmentize-bundled')
  * github URL so it can render README without markdown support.
  *
  * Options:
- * - githulk: A pre-authorized githulk instance.
- * - github: A object with `user` and `repo` information.
+ *
+ * - githulk: A pre-authorized GitHulk instance.
+ * - github:  A object with `user` and `repo` information, if none is supplied we
+ *            we attempt to parse it out of the supplied data object.
+ * - trimmed: Assume the readme is trimmed when it has this size and we should
+ *            attempt to fallback to GitHub data first. Defaults to 64k.
  *
  * @param {Object} data Data structure that contains a `readme`.
  * @param {Object} options Optional options.
@@ -28,6 +32,7 @@ function renderme(data, options, fn) {
     options = {};
   }
 
+  options.trimmed = options.trimmed || 64 * 1024;
   options.githulk = options.githulk || renderme.githulk;
   options.github = options.github || options.githulk.project(data);
 
@@ -61,11 +66,11 @@ function render(data, options, fn) {
   var extension = data.readmeFilename
     , githulk = options.githulk
     , github = options.github
-    , readme = data.readme;
+    , readme = data.readme || '';
 
   //
-  // We don't support this extension, defer rendering to the Github API which
-  // uses their Markup parser to render all supported README extensions.
+  // 1. We don't support this extension, defer rendering to the Github API which
+  //    uses their Markup parser to render all supported README extensions.
   //
   if (!detect(readme, extension)) {
     if (!github) {
@@ -77,6 +82,21 @@ function render(data, options, fn) {
     return githulk.repository.readme(github.user +'/'+ github.repo, fn);
   }
 
+  //
+  // 2. We assume that the README file is trimmed so we should attempt to get
+  //    a README from GitHub first.
+  //
+  if (readme.length === options.trimmed && github) {
+    return githulk.repository.readme(github.user +'/'+ github.repo, function render(err, html) {
+      if (!err && html) return fn(err, html);
+
+      markdown(readme, fn);
+    });
+  }
+
+  //
+  // 3. We support the parsing of Markdown content locally.
+  //
   markdown(readme, function rendered(err, readme) {
     if (!err) return fn(err, readme);
 
