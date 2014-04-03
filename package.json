@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/3rd-Eden/renderme",
   "dependencies": {
-    "debug": "0.7.x",
+    "debug": "0.8.x",
     "githulk": "0.0.x",
     "marked": "0.3.x",
     "pygmentize-bundled": "2.1.x",
@@ -30,8 +30,8 @@
   },
   "devDependencies": {
     "chai": "1.9.x",
-    "mocha": "1.17.x",
-    "npm-registry": "0.0.x",
+    "mocha": "1.18.x",
+    "npm-registry": "0.1.x",
     "pre-commit": "0.0.x"
   }
 }

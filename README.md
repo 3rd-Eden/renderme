@@ -49,6 +49,8 @@ following arguments.
     with the relevant Github repository information
   - `githulk` A pre-configured [githulk] instance which will be used all
     fallback when the given README file isn't a valid markdown file.
+  - `trimmed` The amount of chars we should assume that the supplied README data
+    is trimmed and we need to fallback to GitHub for rendering instead.
 - `fn` The completion callback, which follows the error first callback pattern.
 
 As you might have noticed the `data` structure follows the same internal
