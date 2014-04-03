@@ -80,4 +80,6 @@ DEBUG=renderme* node <entryfile.js>
 
 ## License
 
+MIT
+
 [githulk]: https://github.com/3rd-Eden/githulk
