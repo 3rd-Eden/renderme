@@ -1,6 +1,6 @@
 # Renderme
 
-[![Build Status](https://travis-ci.org/3rd-Eden/renderme.png?branch=master)](https://travis-ci.org/3rd-Eden/renderme)
+[![Build Status](https://travis-ci.org/3rd-Eden/renderme.svg?branch=master)](https://travis-ci.org/3rd-Eden/renderme)
 
 Renderme is simple module with one clear goal: *Render README files*. It tries
 to render the files locally using the `marked` module in the same way as Github
