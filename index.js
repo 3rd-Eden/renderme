@@ -63,10 +63,10 @@ function renderme(data, options, fn) {
  * @api private
  */
 function render(data, options, fn) {
-  var extension = data.readmeFilename
+  var readme = (data.readme || '').toString('utf-8')
+    , extension = data.readmeFilename
     , githulk = options.githulk
-    , github = options.github
-    , readme = data.readme || '';
+    , github = options.github;
 
   //
   // 1. We don't support this extension, defer rendering to the Github API which
