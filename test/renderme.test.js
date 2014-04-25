@@ -48,7 +48,7 @@ describe('renderme', function () {
     it('tranforms relative URLs to github prefixed URLs when repo info is supplied', function () {
       var uri = URI.parse('/LICENSE.md');
 
-      expect(renderme.url(github, uri)).to.equal('https://raw.github.com/3rd-Eden/renderme/blob/master/LICENSE.md');
+      expect(renderme.url(github, uri)).to.equal('https://github.com/3rd-Eden/renderme/raw/master/LICENSE.md');
     });
 
     it('kills relative URLs if there isnt any github intel', function () {
