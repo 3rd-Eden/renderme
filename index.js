@@ -3,6 +3,7 @@
 var pygmentize = require('pygmentize-bundled')
   , debug = require('debug')('renderme')
   , sanitizer = require('sanitizer')
+  , resolve = require('url').resolve
   , GitHulk = require('githulk')
   , marked = require('marked');
 
@@ -135,9 +136,19 @@ function url(github, uri) {
   // to display an URL to github instead of null:null URL.
   //
   if (!uri.hasDomain() && github && !uri.hasFragment()) {
-    uri.setDomain('raw.github.com');
+    uri.setDomain('github.com');
     uri.setScheme('https');
-    uri.setPath('/'+ github.user +'/'+ github.repo +'/blob/master'+ uri.getPath());
+
+    var repo = github.repo
+      , suffix = '/';
+
+    if (~repo.indexOf('/')) {
+      suffix = repo.split('/');
+      repo = suffix.splice(0, 1);
+      suffix = '/'+ suffix.join('/');
+    }
+
+    uri.setPath('/'+ github.user +'/'+ repo +'/raw/master'+ resolve(suffix, uri.getPath()));
   }
 
   //
