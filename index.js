@@ -270,6 +270,23 @@ renderer.code = function render(code, lang, escape) {
   return code; // @TODO what about failed highlighting?
 };
 
+//
+// Correctly render the headers according to github URL scheme.
+//
+renderer.heading = function header(text, depth, escape) {
+  var id = text.replace(/[\.|\#]/g, '')     // Remove dots and others.
+               .replace(/[^\w]+/g, '-')     // All none-words are now -'s>
+               .replace(/[\-]+$/, '')       // Remove suffixed -'s.
+               .toLowerCase();              // Always lowercase things.
+
+  return [
+    '<h', depth, '>',
+      '<a name="', id, '" class="anchor" href="#', id, '"></a>',
+      text,
+    '</h', depth, '>'
+  ].join('') + '\n';
+};
+
 /**
  * Create a GitHulk instance that we use to query the Github API.
  *
